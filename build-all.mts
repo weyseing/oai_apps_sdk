@@ -7,6 +7,7 @@ import crypto from "crypto";
 import pkg from "./package.json" with { type: "json" };
 import tailwindcss from "@tailwindcss/vite";
 
+// entry and output
 const entries = fg.sync("src/**/index.{tsx,jsx}");
 const outDir = "assets";
 
@@ -14,6 +15,7 @@ const PER_ENTRY_CSS_GLOB = "**/*.{css,pcss,scss,sass}";
 const PER_ENTRY_CSS_IGNORE = "**/*.module.*".split(",").map((s) => s.trim());
 const GLOBAL_CSS_LIST = [path.resolve("src/index.css")];
 
+// target to build
 const targets: string[] = [
   "todo",
   "solar-system",
@@ -57,9 +59,12 @@ function wrapEntryPlugin(
   };
 }
 
+// clear outDir
 fs.rmSync(outDir, { recursive: true, force: true });
 
+// loop entry and build
 for (const file of entries) {
+  // skip non-targets
   const name = path.basename(path.dirname(file));
   if (targets.length && !targets.includes(name)) {
     continue;
@@ -68,7 +73,7 @@ for (const file of entries) {
   const entryAbs = path.resolve(file);
   const entryDir = path.dirname(entryAbs);
 
-  // Collect CSS for this entry using the glob(s) rooted at its directory
+  // collect css
   const perEntryCss = fg.sync(PER_ENTRY_CSS_GLOB, {
     cwd: entryDir,
     absolute: true,
