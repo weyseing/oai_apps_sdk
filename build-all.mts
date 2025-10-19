@@ -31,6 +31,7 @@ const targets: string[] = [
 ];
 const builtNames: string[] = [];
 
+// plugin to inject CSS imports
 function wrapEntryPlugin(
   virtualId: string,
   entryFile: string,
@@ -86,26 +87,23 @@ for (const file of entries) {
     ignore: PER_ENTRY_CSS_IGNORE,
   });
 
-  console.log(`\n----------\nTEST: ${file}`);
-  console.log(`TEST: ${perEntryCss}`);
-  continue;
-
-
-  // Global CSS (Tailwind, etc.), only include those that exist
+  // global css 
   const globalCss = GLOBAL_CSS_LIST.filter((p) => fs.existsSync(p));
 
-  // Final CSS list (global first for predictable cascade)
+  // combine css
   const cssToInclude = [...globalCss, ...perEntryCss].filter((p) =>
     fs.existsSync(p)
   );
 
   const virtualId = `\0virtual-entry:${entryAbs}`;
 
+  // vite config
   const createConfig = (): InlineConfig => ({
     plugins: [
-      wrapEntryPlugin(virtualId, entryAbs, cssToInclude),
+      wrapEntryPlugin(virtualId, entryAbs, cssToInclude), // inject css import
       tailwindcss(),
       react(),
+      // custom plugin to remove manualChunks - ensures single file
       {
         name: "remove-manual-chunks",
         outputOptions(options) {
@@ -145,12 +143,16 @@ for (const file of entries) {
     },
   });
 
+  // vite building
   console.group(`Building ${name} (react)`);
   await build(createConfig());
   console.groupEnd();
   builtNames.push(name);
   console.log(`Built ${name}`);
 }
+
+console.log(builtNames);
+exit();
 
 const outputs = fs
   .readdirSync("assets")
