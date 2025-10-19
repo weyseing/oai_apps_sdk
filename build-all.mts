@@ -151,17 +151,15 @@ for (const file of entries) {
   console.log(`Built ${name}`);
 }
 
-console.log(builtNames);
-exit();
-
+// get output files
 const outputs = fs
   .readdirSync("assets")
   .filter((f) => f.endsWith(".js") || f.endsWith(".css"))
   .map((f) => path.join("assets", f))
   .filter((p) => fs.existsSync(p));
 
+// hash & rename output files
 const renamed = [];
-
 const h = crypto
   .createHash("sha256")
   .update(pkg.version, "utf8")
@@ -174,15 +172,14 @@ for (const out of outputs) {
   const ext = path.extname(out);
   const base = path.basename(out, ext);
   const newName = path.join(dir, `${base}-${h}${ext}`);
-
   fs.renameSync(out, newName);
   renamed.push({ old: out, neu: newName });
   console.log(`${out} -> ${newName}`);
 }
 console.groupEnd();
-
 console.log("new hash: ", h);
 
+// generate standalone html files
 for (const name of builtNames) {
   const dir = outDir;
   const htmlPath = path.join(dir, `${name}-${h}.html`);

@@ -8,10 +8,10 @@
     - pnpm (recommended) or npm/yarn
     - Python 3.10+
 
-- **Install Dependencies**
+- **Install dependencies**
     - `pnpm install`
 
-- **Build Components Gallery**
+- **Build components gallery**
     - `pnpm run build`
 
 # [In-Review]
