@@ -8,11 +8,13 @@ import fs from "fs";
 import crypto from "crypto";
 import pkg from "./package.json" with { type: "json" };
 import tailwindcss from "@tailwindcss/vite";
+import { exit } from "process";
 
 // entry and output
 const entries = fg.sync("src/**/index.{tsx,jsx}");
 const outDir = "assets";
 
+// css collection, ignore patternsm global css
 const PER_ENTRY_CSS_GLOB = "**/*.{css,pcss,scss,sass}";
 const PER_ENTRY_CSS_IGNORE = "**/*.module.*".split(",").map((s) => s.trim());
 const GLOBAL_CSS_LIST = [path.resolve("src/index.css")];
@@ -72,6 +74,7 @@ for (const file of entries) {
     continue;
   }
 
+  // path & dir
   const entryAbs = path.resolve(file);
   const entryDir = path.dirname(entryAbs);
 
@@ -82,6 +85,11 @@ for (const file of entries) {
     dot: false,
     ignore: PER_ENTRY_CSS_IGNORE,
   });
+
+  console.log(`\n----------\nTEST: ${file}`);
+  console.log(`TEST: ${perEntryCss}`);
+  continue;
+
 
   // Global CSS (Tailwind, etc.), only include those that exist
   const globalCss = GLOBAL_CSS_LIST.filter((p) => fs.existsSync(p));

@@ -16,7 +16,5 @@ RUN npm install -g pnpm
 WORKDIR /app
 COPY . /app
 
-# install project dependencies
-RUN pnpm install 
-
-CMD ["tail", "-f", "/dev/null"]
+# docker entrypoint
+ENTRYPOINT ["/app/docker-entrypoint.sh"]
