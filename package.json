@@ -5,7 +5,7 @@
   "main": "host/main.ts",
   "scripts": {
     "build": "tsx ./build-all.mts",
-    "serve": "serve -s ./assets -p 4444 --cors",
+    "serve": "serve ./assets -l tcp://0.0.0.0:4444 --cors",
     "dev": "vite --config vite.config.mts --host 0.0.0.0",
     "tsc": "tsc -b",
     "tsc:app": "tsc -p tsconfig.app.json",

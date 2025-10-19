@@ -5,6 +5,7 @@ import path from "node:path";
 import fs from "node:fs";
 import tailwindcss from "@tailwindcss/vite";
 
+// input files
 function buildInputs() {
   const files = fg.sync("src/**/index.{tsx,jsx}", { dot: false });
   return Object.fromEntries(
@@ -12,15 +13,17 @@ function buildInputs() {
   );
 }
 
+// convert path to Vite file-system URL
 const toFs = (abs: string) => "/@fs/" + abs.replace(/\\/g, "/");
 
+// convert path to server-relative path
 const toServerRoot = (abs: string) => {
   const rel = path.relative(process.cwd(), abs).replace(/\\/g, "/");
-  // If it's not really relative (different drive or absolute), fall back to fs URL
   if (!rel || rel.startsWith("..") || path.isAbsolute(rel)) return toFs(abs);
   return "./" + rel;
 };
 
+// plugin to serve multiple dev entrypoints 
 function multiEntryDevEndpoints(options: {
   entries: Record<string, string>;
   globalCss?: string[];
@@ -34,70 +37,78 @@ function multiEntryDevEndpoints(options: {
     perEntryCssIgnore = ["**/*.module.*"],
   } = options;
 
-  const V_PREFIX = "\0multi-entry:"; // Rollup “virtual module” prefix
+  const V_PREFIX = "\0multi-entry:"; 
 
+  // hide from index.html
   const HIDE_FROM_HOME = new Set(["flashcards", "daw"]);
 
+  // index.html
   const renderIndexHtml = (names: string[]): string => `<!doctype html>
-<html>
-<head>
-  <meta charset="utf-8" />
-  <title>ecosystem ui examples</title>
-  <style>
-    body { font: 15px/1.5 system-ui, sans-serif; margin: 32px; color: #1f2933; }
-    h1 { font-size: 20px; margin-bottom: 12px; }
-    ul { padding-left: 18px; }
-    li { margin-bottom: 6px; }
-    a { color: #2563eb; text-decoration: none; }
-    a:hover { text-decoration: underline; }
-    code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 13px; margin-left: 6px; color: #64748b; }
-  </style>
-</head>
-<body>
-  <h1>Examples</h1>
-  <ul>
-    ${names
-      .filter((n) => !HIDE_FROM_HOME.has(n))
-      .toSorted()
-      .map(
-        (name) =>
-          `<li><a href="/${name}.html">${name}</a><code>/${name}.html</code></li>`
-      )
-      .join("\n    ")}
-  </ul>
-</body>
-</html>`;
-
-  const renderDevHtml = (name: string): string => `<!doctype html>
-<html>
-<head>
-  <script type="module" src="/${name}.js"></script>
-  <link rel="stylesheet" href="/${name}.css">
+  <html>
+  <head>
+    <meta charset="utf-8" />
+    <title>ecosystem ui examples</title>
+    <style>
+      body { font: 15px/1.5 system-ui, sans-serif; margin: 32px; color: #1f2933; }
+      h1 { font-size: 20px; margin-bottom: 12px; }
+      ul { padding-left: 18px; }
+      li { margin-bottom: 6px; }
+      a { color: #2563eb; text-decoration: none; }
+      a:hover { text-decoration: underline; }
+      code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 13px; margin-left: 6px; color: #64748b; }
+    </style>
   </head>
-<body>
-  <div id="${name}-root"></div>
-</body>
-</html>`;
+  <body>
+    <h1>Examples</h1>
+    <ul>
+      ${names
+        .filter((n) => !HIDE_FROM_HOME.has(n))
+        .toSorted()
+        .map(
+          (name) =>
+            `<li><a href="/${name}.html">${name}</a><code>/${name}.html</code></li>`
+        )
+        .join("\n    ")}
+    </ul>
+  </body>
+  </html>`;
+
+  // dev html
+  const renderDevHtml = (name: string): string => `<!doctype html>
+  <html>
+  <head>
+    <script type="module" src="/${name}.js"></script>
+    <link rel="stylesheet" href="/${name}.css">
+    </head>
+  <body>
+    <div id="${name}-root"></div>
+  </body>
+  </html>`;
 
   return {
     name: "multi-entry-dev-endpoints",
+    // configure dev server
     configureServer(server) {
+      // entries list
       const names = Object.keys(entries);
       const list = names
         .map((n) => `/${n}.html, /${n}.js, /${n}.css`)
         .join("\n  ");
       server.config.logger.info(`\nDev endpoints:\n  ${list}\n`);
 
+      // custome middleware
       server.middlewares.use((req, res, next) => {
         try {
           if (req.method !== "GET" || !req.url) return next();
           const url = req.url.split("?")[0];
+          // index.html
           if (url === "/" || url === "" || url === "/index.html") {
             const html = renderIndexHtml(names);
             res.setHeader("Content-Type", "text/html; charset=utf-8");
             res.end(html);
             return;
           }
+          // dev html
           const bareMatch = url.match(/^\/?([\w-]+)\/?$/);
           if (bareMatch && entries[bareMatch[1]]) {
             const name = bareMatch[1];
@@ -107,30 +118,32 @@ function multiEntryDevEndpoints(options: {
             return;
           }
 
+          // validate html entry
           if (!url.endsWith(".html")) return next();
-
           const m = url.match(/^\/?([\w-]+)\.html$/);
           if (!m) return next();
           const name = m[1];
           if (!entries[name]) return next();
 
+          // dev html
           const html = renderDevHtml(name);
           res.setHeader("Content-Type", "text/html");
           res.end(html);
           return;
         } catch {
-          // fall through
         }
         next();
       });
     },
+    //  resolve module import
     resolveId(id: string) {
-      // Map request paths to virtual ids
       if (id.startsWith("/")) id = id.slice(1);
+      // resolve JS module
       if (id.endsWith(".js")) {
         const name = id.slice(0, -3);
         if (entries[name]) return `${V_PREFIX}entry:${name}`;
       }
+      // resolve CSS module
       if (id.endsWith(".css")) {
         const name = id.slice(0, -4);
         if (entries[name]) return `${V_PREFIX}style:${name}.css`;
@@ -138,18 +151,19 @@ function multiEntryDevEndpoints(options: {
       if (id.startsWith(V_PREFIX)) return id;
       return null;
     },
+    // load virtual module
     load(id: string) {
       if (!id.startsWith(V_PREFIX)) return null;
 
-      const rest = id.slice(V_PREFIX.length); // "entry:foo" or "style:foo.css"
+      // parse id
+      const rest = id.slice(V_PREFIX.length); 
       const [kind, nameWithExt] = rest.split(":", 2);
       const name = nameWithExt.replace(/\.css$/, "");
       const entry = entries[name];
       if (!entry) return null;
-
       const entryDir = path.dirname(entry);
 
-      // Collect CSS (global first for stable cascade)
+      // collect CSS files
       const globals = globalCss
         .map((p) => path.resolve(p))
         .filter((p) => fs.existsSync(p));
@@ -160,8 +174,9 @@ function multiEntryDevEndpoints(options: {
         ignore: perEntryCssIgnore,
       });
 
+      // render CSS
       if (kind === "style") {
-        const allCss = [...globals, ...perEntry]; // absolute paths on disk
+        const allCss = [...globals, ...perEntry];
         const lines = [
           `@source "./src";`,
           ...allCss.map((p) => `@import "${toServerRoot(p)}";`),
@@ -169,28 +184,23 @@ function multiEntryDevEndpoints(options: {
         return lines.join("\n");
       }
 
+      // render JS
       if (kind === "entry") {
         const spec = toFs(entry);
-
         const lines: string[] = [];
-
-        // Import Vite HMR client from root
         lines.push(`import "/@vite/client";`);
-
         lines.push(`
-import RefreshRuntime from "/@react-refresh";
+          import RefreshRuntime from "/@react-refresh";
 
-if (!window.__vite_plugin_react_preamble_installed__) {
-    RefreshRuntime.injectIntoGlobalHook(window);
-    window.$RefreshReg$ = () => {};
-    window.$RefreshSig$ = () => (type) => type;
-    window.__vite_plugin_react_preamble_installed__ = true;
-}
-`);
-
+          if (!window.__vite_plugin_react_preamble_installed__) {
+              RefreshRuntime.injectIntoGlobalHook(window);
+              window.$RefreshReg$ = () => {};
+              window.$RefreshSig$ = () => (type) => type;
+              window.__vite_plugin_react_preamble_installed__ = true;
+          }
+          `);
         lines.push(`import "/${name}.css";`);
         lines.push(`await import(${JSON.stringify(spec)});`);
-
         return lines.join("\n");
       }
 
@@ -199,8 +209,10 @@ if (!window.__vite_plugin_react_preamble_installed__) {
   };
 }
 
+// input files
 const inputs = buildInputs();
 
+// Vite config
 export default defineConfig(({}) => ({
   plugins: [
     tailwindcss(),

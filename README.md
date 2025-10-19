@@ -11,26 +11,23 @@
 - **Install dependencies**
     - `pnpm install`
 
-- **Build components gallery**
+- **Build standalone HTML files**
     - `pnpm run build`
+
+- **Run dev server**
+    - `pnpm run dev`
+    - Access to http://localhost:4444/index.html
+
+- **Serve static files**
+    - `pnpm run build` (build to `/assets`)
+    - `pnpm run serve` (serve from `/assets`)
+    - Access to http://localhost:4444/index.html
+
+
+
 
 # [In-Review]
 
-To iterate locally, you can also launch the Vite dev server:
-
-```bash
-pnpm run dev
-```
-
-## Serve the static assets
-
-If you want to preview the generated bundles without the MCP servers, start the static file server after running a build:
-
-```bash
-pnpm run serve
-```
-
-The assets are exposed at [`http://localhost:4444`](http://localhost:4444) with CORS enabled so that local tooling (including MCP inspectors) can fetch them.
 
 ## Run the MCP servers
 
