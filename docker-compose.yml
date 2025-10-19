@@ -1,0 +1,8 @@
+services:
+  oai_apps_sdk:
+    container_name: oai_apps_sdk
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - .:/app

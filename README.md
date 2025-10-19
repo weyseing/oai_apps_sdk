@@ -1,3 +1,6 @@
+# Source
+- https://github.com/openai/openai-apps-sdk-examples
+
 # Setup 
 
 - **Prerequisites**
@@ -11,7 +14,7 @@
 - **Build Components Gallery**
     - `pnpm run build`
 
-# In-Review
+# [In-Review]
 
 To iterate locally, you can also launch the Vite dev server:
 
