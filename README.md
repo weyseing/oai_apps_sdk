@@ -23,27 +23,17 @@
     - `pnpm run serve` (serve from `/assets`)
     - Access to http://localhost:4444/index.html
 
+# MCP Servers (Node)
+- **Start MCP server**
+```bash
+cd pizzaz_server_node
+pnpm run start
+```
 
+- **Access to** http://localhost:8080/mcp
 
 
 # [In-Review]
-
-
-## Run the MCP servers
-
-The repository ships several demo MCP servers that highlight different widget bundles:
-
-- **Pizzaz (Node & Python)** – pizza-inspired collection of tools and components
-- **Solar system (Python)** – 3D solar system viewer
-
-Every tool response includes plain text content, structured JSON, and `_meta.openai/outputTemplate` metadata so the Apps SDK can hydrate the matching widget.
-
-### Pizzaz Node server
-
-```bash
-cd pizzaz_server_node
-pnpm start
-```
 
 ### Pizzaz Python server
 
@@ -85,11 +75,3 @@ For example: `https://<custom_endpoint>.ngrok-free.app/mcp`
 
 - Customize the widget data: edit the handlers in `pizzaz_server_node/src`, `pizzaz_server_python/main.py`, or the solar system server to fetch data from your systems.
 - Create your own components and add them to the gallery: drop new entries into `src/` and they will be picked up automatically by the build script.
-
-## Contributing
-
-You are welcome to open issues or submit PRs to improve this app, however, please note that we may not review all suggestions.
-
-## License
-
-This project is licensed under the MIT License. See [LICENSE](./LICENSE) for details.

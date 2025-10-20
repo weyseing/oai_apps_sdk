@@ -1,6 +1,5 @@
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 import { URL } from "node:url";
-
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
 import {
@@ -20,6 +19,7 @@ import {
 } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
 
+// widget definitions
 type PizzazWidget = {
   id: string;
   title: string;
@@ -30,6 +30,7 @@ type PizzazWidget = {
   responseText: string;
 };
 
+// widget metadata
 function widgetMeta(widget: PizzazWidget) {
   return {
     "openai/outputTemplate": widget.templateUri,
@@ -40,6 +41,7 @@ function widgetMeta(widget: PizzazWidget) {
   } as const;
 }
 
+// define widgets
 const widgets: PizzazWidget[] = [
   {
     id: "pizza-map",
@@ -48,7 +50,7 @@ const widgets: PizzazWidget[] = [
     invoking: "Hand-tossing a map",
     invoked: "Served a fresh map",
     html: `
-<div id="pizzaz-root"></div>
+<div id="pizzaz-root"></div> 
 <link rel="stylesheet" href="https://persistent.oaistatic.com/ecosystem-built-assets/pizzaz-0038.css">
 <script type="module" src="https://persistent.oaistatic.com/ecosystem-built-assets/pizzaz-0038.js"></script>
     `.trim(),
@@ -296,8 +298,9 @@ async function handlePostMessage(
   }
 }
 
-const portEnv = Number(process.env.PORT ?? 8000);
-const port = Number.isFinite(portEnv) ? portEnv : 8000;
+// host & port
+const port = 8080;
+const host = '0.0.0.0';
 
 const httpServer = createServer(async (req: IncomingMessage, res: ServerResponse) => {
   if (!req.url) {
@@ -335,8 +338,8 @@ httpServer.on("clientError", (err: Error, socket) => {
   socket.end("HTTP/1.1 400 Bad Request\r\n\r\n");
 });
 
-httpServer.listen(port, () => {
-  console.log(`Pizzaz MCP server listening on http://localhost:${port}`);
-  console.log(`  SSE stream: GET http://localhost:${port}${ssePath}`);
-  console.log(`  Message post endpoint: POST http://localhost:${port}${postPath}?sessionId=...`);
+httpServer.listen(port, host, () => {
+  console.log(`MCP server listening on http://${host}:${port}`);
+  console.log(`  SSE stream: GET http://${host}:${port}${ssePath}`);
+  console.log(`  Message post endpoint: POST http://${host}:${port}${postPath}?sessionId=...`);
 });
