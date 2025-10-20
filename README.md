@@ -27,6 +27,7 @@
 - **Start MCP server**
 ```bash
 cd pizzaz_server_node
+pnpm install
 pnpm run start
 ```
 - **Access to** http://localhost:8080/mcp
@@ -37,33 +38,15 @@ pnpm run start
 
 ![mcp-inspector](./img/1.PNG)
 
+# Test via ChatGPT
+- Enable [developer mode](https://platform.openai.com/docs/guides/developer-mode), and add your apps in `Settings > Connectors`.
+
 
 
 # [In-Review]
 
-### Pizzaz Python server
-
-```bash
-python -m venv .venv
-source .venv/bin/activate
-pip install -r pizzaz_server_python/requirements.txt
-uvicorn pizzaz_server_python.main:app --port 8000
-```
-
-### Solar system Python server
-
-```bash
-python -m venv .venv
-source .venv/bin/activate
-pip install -r solar-system_server_python/requirements.txt
-uvicorn solar-system_server_python.main:app --port 8000
-```
-
-You can reuse the same virtual environment for all Python servers—install the dependencies once and run whichever entry point you need.
 
 ## Testing in ChatGPT
-
-To add these apps to ChatGPT, enable [developer mode](https://platform.openai.com/docs/guides/developer-mode), and add your apps in Settings > Connectors.
 
 To add your local server without deploying it, you can use a tool like [ngrok](https://ngrok.com/) to expose your local server to the internet.
 

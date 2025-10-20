@@ -183,13 +183,12 @@ function createPizzazServer(): Server {
     return { resources };
   });
 
+  // read resource
   server.setRequestHandler(ReadResourceRequestSchema, async (request: ReadResourceRequest) => {
     const widget = widgetsByUri.get(request.params.uri);
-
     if (!widget) {
       throw new Error(`Unknown resource: ${request.params.uri}`);
     }
-
     return {
       contents: [
         {
@@ -202,23 +201,24 @@ function createPizzazServer(): Server {
     };
   });
 
+  // list resource templates
   server.setRequestHandler(ListResourceTemplatesRequestSchema, async (_request: ListResourceTemplatesRequest) => ({
     resourceTemplates
   }));
 
+  // list tools
   server.setRequestHandler(ListToolsRequestSchema, async (_request: ListToolsRequest) => ({
     tools
   }));
 
+  // call tool
   server.setRequestHandler(CallToolRequestSchema, async (request: CallToolRequest) => {
     const widget = widgetsById.get(request.params.name);
-
     if (!widget) {
       throw new Error(`Unknown tool: ${request.params.name}`);
     }
 
     const args = toolInputParser.parse(request.params.arguments ?? {});
-
     return {
       content: [
         {
@@ -236,25 +236,18 @@ function createPizzazServer(): Server {
   return server;
 }
 
-// // DELETE
-// const server = createPizzazServer();
-// console.log(`--- TEST --- `);
-// console.log(server);
-// exit();
-// // DELETE
-
-
-
 // session
 type SessionRecord = {
   server: Server;
   transport: SSEServerTransport;
 };
-
 const sessions = new Map<string, SessionRecord>();
+
+// SSE & POST endpoint
 const ssePath = "/mcp";
 const postPath = "/mcp/messages";
 
+// handle SSE request
 async function handleSseRequest(res: ServerResponse) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   const server = createPizzazServer();
@@ -283,6 +276,7 @@ async function handleSseRequest(res: ServerResponse) {
   }
 }
 
+// handle POST message
 async function handlePostMessage(
   req: IncomingMessage,
   res: ServerResponse,
@@ -314,18 +308,21 @@ async function handlePostMessage(
   }
 }
 
-// host & port
+// mcp host & port
 const port = 8080;
 const host = '0.0.0.0';
 
+// create HTTP server
 const httpServer = createServer(async (req: IncomingMessage, res: ServerResponse) => {
   if (!req.url) {
     res.writeHead(400).end("Missing URL");
     return;
   }
 
+  // parse URL
   const url = new URL(req.url, `http://${req.headers.host ?? "localhost"}`);
 
+  // CORS preflight
   if (req.method === "OPTIONS" && (url.pathname === ssePath || url.pathname === postPath)) {
     res.writeHead(204, {
       "Access-Control-Allow-Origin": "*",
@@ -336,16 +333,19 @@ const httpServer = createServer(async (req: IncomingMessage, res: ServerResponse
     return;
   }
 
+  // handle SSE connection
   if (req.method === "GET" && url.pathname === ssePath) {
     await handleSseRequest(res);
     return;
   }
 
+  // handle POST message
   if (req.method === "POST" && url.pathname === postPath) {
     await handlePostMessage(req, res, url);
     return;
   }
 
+  // not found
   res.writeHead(404).end("Not Found");
 });
 
