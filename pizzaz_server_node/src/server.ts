@@ -18,6 +18,7 @@ import {
   type Tool
 } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
+import { exit } from "node:process";
 
 // widget definitions
 type PizzazWidget = {
@@ -110,14 +111,15 @@ const widgets: PizzazWidget[] = [
   }
 ];
 
+// widgets by id & uri
 const widgetsById = new Map<string, PizzazWidget>();
 const widgetsByUri = new Map<string, PizzazWidget>();
-
 widgets.forEach((widget) => {
   widgetsById.set(widget.id, widget);
   widgetsByUri.set(widget.templateUri, widget);
 });
 
+// tool input schema
 const toolInputSchema = {
   type: "object",
   properties: {
@@ -130,10 +132,12 @@ const toolInputSchema = {
   additionalProperties: false
 } as const;
 
+// input parser
 const toolInputParser = z.object({
   pizzaTopping: z.string()
 });
 
+// widget to MCP tools
 const tools: Tool[] = widgets.map((widget) => ({
   name: widget.id,
   description: widget.title,
@@ -141,6 +145,13 @@ const tools: Tool[] = widgets.map((widget) => ({
   title: widget.title,
   _meta: widgetMeta(widget)
 }));
+
+
+// DELETE
+console.log(`--- TEST --- `);
+console.log(tools);
+exit();
+// DELETE
 
 const resources: Resource[] = widgets.map((widget) => ({
   uri: widget.templateUri,
