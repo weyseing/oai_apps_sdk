@@ -1,5 +1,7 @@
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
-import { URL } from "node:url";
+import fs from "node:fs";
+import path from "node:path";
+import { URL, fileURLToPath } from "node:url";
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
 import {
@@ -18,7 +20,6 @@ import {
   type Tool
 } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
-import { exit } from "node:process";
 
 // widget definitions
 type PizzazWidget = {
@@ -31,6 +32,46 @@ type PizzazWidget = {
   responseText: string;
 };
 
+// paths
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const ROOT_DIR = path.resolve(__dirname, "..", "..");
+const ASSETS_DIR = path.resolve(ROOT_DIR, "assets");
+
+// read widget HTML
+function readWidgetHtml(componentName: string): string {
+  if (!fs.existsSync(ASSETS_DIR)) {
+    throw new Error(
+      `Widget assets not found. Expected directory ${ASSETS_DIR}. Run "pnpm run build" before starting the server.`
+    );
+  }
+
+  const directPath = path.join(ASSETS_DIR, `${componentName}.html`);
+  let htmlContents: string | null = null;
+
+  if (fs.existsSync(directPath)) {
+    htmlContents = fs.readFileSync(directPath, "utf8");
+  } else {
+    const candidates = fs
+      .readdirSync(ASSETS_DIR)
+      .filter(
+        (file) => file.startsWith(`${componentName}-`) && file.endsWith(".html")
+      )
+      .sort();
+    const fallback = candidates[candidates.length - 1];
+    if (fallback) {
+      htmlContents = fs.readFileSync(path.join(ASSETS_DIR, fallback), "utf8");
+    }
+  }
+
+  if (!htmlContents) {
+    throw new Error(
+      `Widget HTML for "${componentName}" not found in ${ASSETS_DIR}. Run "pnpm run build" to generate the assets.`
+    );
+  }
+
+  return htmlContents;
+}
+
 // widget metadata
 function widgetMeta(widget: PizzazWidget) {
   return {
@@ -38,11 +79,11 @@ function widgetMeta(widget: PizzazWidget) {
     "openai/toolInvocation/invoking": widget.invoking,
     "openai/toolInvocation/invoked": widget.invoked,
     "openai/widgetAccessible": true,
-    "openai/resultCanProduceWidget": true
+    "openai/resultCanProduceWidget": true,
   } as const;
 }
 
-// define widgets
+// widget
 const widgets: PizzazWidget[] = [
   {
     id: "pizza-map",
@@ -50,12 +91,8 @@ const widgets: PizzazWidget[] = [
     templateUri: "ui://widget/pizza-map.html",
     invoking: "Hand-tossing a map",
     invoked: "Served a fresh map",
-    html: `
-<div id="pizzaz-root"></div> 
-<link rel="stylesheet" href="https://persistent.oaistatic.com/ecosystem-built-assets/pizzaz-0038.css">
-<script type="module" src="https://persistent.oaistatic.com/ecosystem-built-assets/pizzaz-0038.js"></script>
-    `.trim(),
-    responseText: "Rendered a pizza map!"
+    html: readWidgetHtml("pizzaz"),
+    responseText: "Rendered a pizza map!",
   },
   {
     id: "pizza-carousel",
@@ -63,12 +100,8 @@ const widgets: PizzazWidget[] = [
     templateUri: "ui://widget/pizza-carousel.html",
     invoking: "Carousel some spots",
     invoked: "Served a fresh carousel",
-    html: `
-<div id="pizzaz-carousel-root"></div>
-<link rel="stylesheet" href="https://persistent.oaistatic.com/ecosystem-built-assets/pizzaz-carousel-0038.css">
-<script type="module" src="https://persistent.oaistatic.com/ecosystem-built-assets/pizzaz-carousel-0038.js"></script>
-    `.trim(),
-    responseText: "Rendered a pizza carousel!"
+    html: readWidgetHtml("pizzaz-carousel"),
+    responseText: "Rendered a pizza carousel!",
   },
   {
     id: "pizza-albums",
@@ -76,12 +109,8 @@ const widgets: PizzazWidget[] = [
     templateUri: "ui://widget/pizza-albums.html",
     invoking: "Hand-tossing an album",
     invoked: "Served a fresh album",
-    html: `
-<div id="pizzaz-albums-root"></div>
-<link rel="stylesheet" href="https://persistent.oaistatic.com/ecosystem-built-assets/pizzaz-albums-0038.css">
-<script type="module" src="https://persistent.oaistatic.com/ecosystem-built-assets/pizzaz-albums-0038.js"></script>
-    `.trim(),
-    responseText: "Rendered a pizza album!"
+    html: readWidgetHtml("pizzaz-albums"),
+    responseText: "Rendered a pizza album!",
   },
   {
     id: "pizza-list",
@@ -89,26 +118,9 @@ const widgets: PizzazWidget[] = [
     templateUri: "ui://widget/pizza-list.html",
     invoking: "Hand-tossing a list",
     invoked: "Served a fresh list",
-    html: `
-<div id="pizzaz-list-root"></div>
-<link rel="stylesheet" href="https://persistent.oaistatic.com/ecosystem-built-assets/pizzaz-list-0038.css">
-<script type="module" src="https://persistent.oaistatic.com/ecosystem-built-assets/pizzaz-list-0038.js"></script>
-    `.trim(),
-    responseText: "Rendered a pizza list!"
+    html: readWidgetHtml("pizzaz-list"),
+    responseText: "Rendered a pizza list!",
   },
-  {
-    id: "pizza-video",
-    title: "Show Pizza Video",
-    templateUri: "ui://widget/pizza-video.html",
-    invoking: "Hand-tossing a video",
-    invoked: "Served a fresh video",
-    html: `
-<div id="pizzaz-video-root"></div>
-<link rel="stylesheet" href="https://persistent.oaistatic.com/ecosystem-built-assets/pizzaz-video-0038.css">
-<script type="module" src="https://persistent.oaistatic.com/ecosystem-built-assets/pizzaz-video-0038.js"></script>
-    `.trim(),
-    responseText: "Rendered a pizza video!"
-  }
 ];
 
 // widgets by id & uri
@@ -137,13 +149,19 @@ const toolInputParser = z.object({
   pizzaTopping: z.string()
 });
 
-// widget to MCP tools
+// MCP tools
 const tools: Tool[] = widgets.map((widget) => ({
   name: widget.id,
   description: widget.title,
   inputSchema: toolInputSchema,
   title: widget.title,
-  _meta: widgetMeta(widget)
+  _meta: widgetMeta(widget),
+  // to disable the approval prompt for the widgets
+  annotations: {
+    destructiveHint: false,
+    openWorldHint: false,
+    readOnlyHint: true,
+  },
 }));
 
 // resources

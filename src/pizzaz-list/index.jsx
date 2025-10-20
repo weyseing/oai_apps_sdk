@@ -2,12 +2,25 @@ import React from "react";
 import { createRoot } from "react-dom/client";
 import markers from "../pizzaz/markers.json";
 import { PlusCircle, Star } from "lucide-react";
+import { useOpenAiGlobal } from "../use-openai-global";
+
+function getWidgetData() {
+  const data = useOpenAiGlobal("toolOutput");
+  return data || {};
+}
 
 function App() {
   const places = markers?.places || [];
 
+  const widgetData = getWidgetData();
+  const topping = widgetData?.pizzaTopping || "No topping data received from MCP tool";
+  console.log("Received topping:", widgetData);
+
   return (
     <div className="antialiased w-full text-black px-4 pb-2 border border-black/10 rounded-2xl sm:rounded-3xl overflow-hidden bg-white">
+      <div className="mt-3 p-4 border-2 border-indigo-400 bg-indigo-50 rounded-lg text-lg font-mono font-bold text-indigo-900 break-words">
+        TEST: {topping}
+      </div>
       <div className="max-w-full">
         <div className="flex flex-row items-center gap-4 sm:gap-4 border-b border-black/5 py-4">
           <div
