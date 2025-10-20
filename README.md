@@ -1,7 +1,7 @@
 # Source
 - https://github.com/openai/openai-apps-sdk-examples
 
-# Setup 
+# App Widget 
 
 - **Prerequisites**
     - Node.js 18+
@@ -38,29 +38,12 @@ pnpm run start
 
 ![mcp-inspector](./img/1.PNG)
 
-# Test via ChatGPT
-- Enable [developer mode](https://platform.openai.com/docs/guides/developer-mode), and add your apps in `Settings > Connectors`.
-
-
-
-# [In-Review]
-
-
-## Testing in ChatGPT
-
-To add your local server without deploying it, you can use a tool like [ngrok](https://ngrok.com/) to expose your local server to the internet.
-
-For example, once your mcp servers are running, you can run:
-
+# ChatGPT Connector
+- **Create public endpoint via Serveo**
 ```bash
-ngrok http 8000
+ssh -R 80:localhost:8080 serveo.net
 ```
 
-You will get a public URL that you can use to add your local server to ChatGPT in Settings > Connectors.
+- **Enable [developer mode](https://platform.openai.com/docs/guides/developer-mode) and add apps in `Settings > Connectors`**.
 
-For example: `https://<custom_endpoint>.ngrok-free.app/mcp`
-
-## Next steps
-
-- Customize the widget data: edit the handlers in `pizzaz_server_node/src`, `pizzaz_server_python/main.py`, or the solar system server to fetch data from your systems.
-- Create your own components and add them to the gallery: drop new entries into `src/` and they will be picked up automatically by the build script.
+![mcp-inspector](./img/2.PNG)

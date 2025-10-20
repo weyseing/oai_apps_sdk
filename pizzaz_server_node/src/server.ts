@@ -146,7 +146,7 @@ const tools: Tool[] = widgets.map((widget) => ({
   _meta: widgetMeta(widget)
 }));
 
-// resources and resource templates
+// resources
 const resources: Resource[] = widgets.map((widget) => ({
   uri: widget.templateUri,
   name: widget.title,
@@ -154,6 +154,8 @@ const resources: Resource[] = widgets.map((widget) => ({
   mimeType: "text/html+skybridge",
   _meta: widgetMeta(widget)
 }));
+
+// resource templates
 const resourceTemplates: ResourceTemplate[] = widgets.map((widget) => ({
   uriTemplate: widget.templateUri,
   name: widget.title,
