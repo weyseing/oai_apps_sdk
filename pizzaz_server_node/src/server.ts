@@ -146,13 +146,7 @@ const tools: Tool[] = widgets.map((widget) => ({
   _meta: widgetMeta(widget)
 }));
 
-
-// DELETE
-console.log(`--- TEST --- `);
-console.log(tools);
-exit();
-// DELETE
-
+// resources and resource templates
 const resources: Resource[] = widgets.map((widget) => ({
   uri: widget.templateUri,
   name: widget.title,
@@ -160,7 +154,6 @@ const resources: Resource[] = widgets.map((widget) => ({
   mimeType: "text/html+skybridge",
   _meta: widgetMeta(widget)
 }));
-
 const resourceTemplates: ResourceTemplate[] = widgets.map((widget) => ({
   uriTemplate: widget.templateUri,
   name: widget.title,
@@ -169,7 +162,9 @@ const resourceTemplates: ResourceTemplate[] = widgets.map((widget) => ({
   _meta: widgetMeta(widget)
 }));
 
+// create MCP server
 function createPizzazServer(): Server {
+  // init server
   const server = new Server(
     {
       name: "pizzaz-node",
@@ -183,9 +178,10 @@ function createPizzazServer(): Server {
     }
   );
 
-  server.setRequestHandler(ListResourcesRequestSchema, async (_request: ListResourcesRequest) => ({
-    resources
-  }));
+  // list resources
+  server.setRequestHandler(ListResourcesRequestSchema, async (_request: ListResourcesRequest) => {
+    return { resources };
+  });
 
   server.setRequestHandler(ReadResourceRequestSchema, async (request: ReadResourceRequest) => {
     const widget = widgetsByUri.get(request.params.uri);
@@ -240,13 +236,22 @@ function createPizzazServer(): Server {
   return server;
 }
 
+// // DELETE
+// const server = createPizzazServer();
+// console.log(`--- TEST --- `);
+// console.log(server);
+// exit();
+// // DELETE
+
+
+
+// session
 type SessionRecord = {
   server: Server;
   transport: SSEServerTransport;
 };
 
 const sessions = new Map<string, SessionRecord>();
-
 const ssePath = "/mcp";
 const postPath = "/mcp/messages";
 

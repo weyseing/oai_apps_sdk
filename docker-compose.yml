@@ -9,3 +9,9 @@ services:
     ports:
       - "4444:4444"
       - "8080:8080"
+    networks:
+      global-net:
+
+networks:
+  global-net:
+    external: true

@@ -29,8 +29,14 @@
 cd pizzaz_server_node
 pnpm run start
 ```
-
 - **Access to** http://localhost:8080/mcp
+
+# MCP Inspector
+- **Setup MCP Inspector** from https://github.com/weyseing/mcp-inspector-headers
+- **MUST have same docker network**
+
+![mcp-inspector](./img/1.PNG)
+
 
 
 # [In-Review]
