@@ -174,6 +174,13 @@ for (const out of outputs) {
   const ext = path.extname(out);
   const base = path.basename(out, ext);
   const newName = path.join(dir, `${base}-${h}${ext}`);
+
+  if (!builtNames.includes(base)) {
+    console.log(`Not from entries, skipping: ${out}`);
+    renamed.push({ old: out, neu: out });
+    continue;
+  }
+
   fs.renameSync(out, newName);
   renamed.push({ old: out, neu: newName });
   console.log(`${out} -> ${newName}`);
