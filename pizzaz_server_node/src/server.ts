@@ -39,12 +39,6 @@ const ASSETS_DIR = path.resolve(ROOT_DIR, "assets");
 
 // read widget HTML
 function readWidgetHtml(componentName: string): string {
-  if (!fs.existsSync(ASSETS_DIR)) {
-    throw new Error(
-      `Widget assets not found. Expected directory ${ASSETS_DIR}. Run "pnpm run build" before starting the server.`
-    );
-  }
-
   const directPath = path.join(ASSETS_DIR, `${componentName}.html`);
   let htmlContents: string | null = null;
 
@@ -58,17 +52,12 @@ function readWidgetHtml(componentName: string): string {
       )
       .sort();
     const fallback = candidates[candidates.length - 1];
-    if (fallback) {
+    if (fallback)
       htmlContents = fs.readFileSync(path.join(ASSETS_DIR, fallback), "utf8");
-    }
   }
 
-  if (!htmlContents) {
-    throw new Error(
-      `Widget HTML for "${componentName}" not found in ${ASSETS_DIR}. Run "pnpm run build" to generate the assets.`
-    );
-  }
-
+  if (!htmlContents)
+    throw new Error(`Widget HTML for "${componentName}" not found in ${ASSETS_DIR}. Run "pnpm run build" to generate the assets.`);
   return htmlContents;
 }
 

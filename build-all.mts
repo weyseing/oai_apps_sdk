@@ -8,10 +8,12 @@ import fs from "fs";
 import crypto from "crypto";
 import pkg from "./package.json" with { type: "json" };
 import tailwindcss from "@tailwindcss/vite";
-import { exit } from "process";
 
-// entry and output
-const entries = fg.sync("src/**/index.{tsx,jsx}");
+// src folder
+// const entries = fg.sync("src/**/index.{tsx,jsx}");
+const entries = fg.sync("src/pizzaz-list/index.{tsx,jsx}");
+
+// output folder
 const outDir = "assets";
 
 // css collection, ignore patternsm global css
@@ -65,7 +67,7 @@ function wrapEntryPlugin(
 }
 
 // clear outDir
-fs.rmSync(outDir, { recursive: true, force: true });
+// fs.rmSync(outDir, { recursive: true, force: true });
 
 // loop entry and build
 for (const file of entries) {
