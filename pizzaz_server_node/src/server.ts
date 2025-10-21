@@ -236,6 +236,7 @@ function createPizzazServer(): Server {
         }
       ],
       structuredContent: {
+        appVersion: "1.3",
         pizzaTopping: args.pizzaTopping
       },
       _meta: widgetMeta(widget)

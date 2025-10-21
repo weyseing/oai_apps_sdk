@@ -13,13 +13,12 @@ function App() {
   const places = markers?.places || [];
 
   const widgetData = getWidgetData();
-  const topping = widgetData?.pizzaTopping || "No topping data received from MCP tool";
-  console.log("Received topping:", widgetData);
+  const appVersion = widgetData?.appVersion || "No topping data received from MCP tool";
 
   return (
     <div className="antialiased w-full text-black px-4 pb-2 border border-black/10 rounded-2xl sm:rounded-3xl overflow-hidden bg-white">
       <div className="mt-3 p-4 border-2 border-indigo-400 bg-indigo-50 rounded-lg text-lg font-mono font-bold text-indigo-900 break-words">
-        TEST9: {topping}
+        APP VERSION: 1.3 | SERVER VERSION: {appVersion}
       </div>
       <div className="max-w-full">
         <div className="flex flex-row items-center gap-4 sm:gap-4 border-b border-black/5 py-4">
