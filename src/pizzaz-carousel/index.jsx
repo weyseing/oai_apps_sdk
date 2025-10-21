@@ -4,9 +4,24 @@ import useEmblaCarousel from "embla-carousel-react";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import markers from "../pizzaz/markers.json";
 import PlaceCard from "./PlaceCard";
+import { useOpenAiGlobal } from "../use-openai-global";
+
+function getWidgetData() {
+  const data = useOpenAiGlobal("toolOutput");
+  return data || {};
+}
 
 function App() {
-  const places = markers?.places || [];
+  const widgetData = getWidgetData();
+  const initialPlaces = markers?.places || [];
+  
+  // replace image urls from tool output
+  const imageURLs = widgetData?.image?.url || [];
+  const places = initialPlaces.map((place, index) => ({
+    ...place,
+    thumbnail: imageURLs[index] || 'https://placehold.co/400x300/ff0000/white?text=No+Image', 
+  }));
+
   const [emblaRef, emblaApi] = useEmblaCarousel({
     align: "center",
     loop: false,

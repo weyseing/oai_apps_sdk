@@ -20,8 +20,12 @@ import {
   type Tool
 } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
+import axios from "axios"; 
 
-// widget definitions
+// app version
+const APP_VERSION = "1.3";
+
+// types
 type PizzazWidget = {
   id: string;
   title: string;
@@ -30,6 +34,11 @@ type PizzazWidget = {
   invoked: string;
   html: string;
   responseText: string;
+};
+type PhotoMetadata = {
+  id: string;
+  author: string;
+  download_url: string; 
 };
 
 // paths
@@ -120,6 +129,24 @@ widgets.forEach((widget) => {
   widgetsByUri.set(widget.templateUri, widget);
 });
 
+// resources
+const resources: Resource[] = widgets.map((widget) => ({
+  uri: widget.templateUri,
+  name: widget.title,
+  description: `${widget.title} widget markup`,
+  mimeType: "text/html+skybridge",
+  _meta: widgetMeta(widget)
+}));
+
+// resource templates
+const resourceTemplates: ResourceTemplate[] = widgets.map((widget) => ({
+  uriTemplate: widget.templateUri,
+  name: widget.title,
+  description: `${widget.title} widget markup`,
+  mimeType: "text/html+skybridge",
+  _meta: widgetMeta(widget)
+}));
+
 // tool input schema
 const toolInputSchema = {
   type: "object",
@@ -153,23 +180,47 @@ const tools: Tool[] = widgets.map((widget) => ({
   },
 }));
 
-// resources
-const resources: Resource[] = widgets.map((widget) => ({
-  uri: widget.templateUri,
-  name: widget.title,
-  description: `${widget.title} widget markup`,
-  mimeType: "text/html+skybridge",
-  _meta: widgetMeta(widget)
-}));
-
-// resource templates
-const resourceTemplates: ResourceTemplate[] = widgets.map((widget) => ({
-  uriTemplate: widget.templateUri,
-  name: widget.title,
-  description: `${widget.title} widget markup`,
-  mimeType: "text/html+skybridge",
-  _meta: widgetMeta(widget)
-}));
+// mcp tool handlers
+const toolHandlers: Record<string, (args: any) => Promise<any>> = {
+  "pizza-map": async (args) => {
+    const response = await fetchRandomUser();
+    const randomUser =  response.name;
+    return {
+      appVersion: APP_VERSION,
+      pizzaTopping: args.pizzaTopping,
+      user: randomUser,
+    };
+  },
+  "pizza-carousel": async (args) => {
+    const photoDetails = await fetchRandomPhoto();
+    return {
+      appVersion: APP_VERSION,
+      pizzaTopping: args.pizzaTopping,
+      image: {
+        url: photoDetails,
+        _displayOnly: true
+      },
+    };
+  },
+  "pizza-albums": async (args) => {
+    const response = await fetchRandomUser();
+    const randomUser =  response.name;
+    return {
+      appVersion: APP_VERSION,
+      pizzaTopping: args.pizzaTopping,
+      user: randomUser,
+    };
+  },
+  "pizza-list": async (args) => {
+    const response = await fetchRandomUser();
+    const randomUser =  response.name;
+    return {
+      appVersion: APP_VERSION,
+      pizzaTopping: args.pizzaTopping,
+      user: randomUser,
+    };
+  },
+};
 
 // create MCP server
 function createPizzazServer(): Server {
@@ -227,7 +278,13 @@ function createPizzazServer(): Server {
       throw new Error(`Unknown tool: ${request.params.name}`);
     }
 
+    // tool input args
     const args = toolInputParser.parse(request.params.arguments ?? {});
+
+    // tool output handler
+    const handler = toolHandlers[widget.id];
+    const structuredContent = await handler(args);
+
     return {
       content: [
         {
@@ -235,10 +292,7 @@ function createPizzazServer(): Server {
           text: widget.responseText
         }
       ],
-      structuredContent: {
-        appVersion: "1.3",
-        pizzaTopping: args.pizzaTopping
-      },
+      structuredContent,
       _meta: widgetMeta(widget)
     };
   });
@@ -358,14 +412,36 @@ const httpServer = createServer(async (req: IncomingMessage, res: ServerResponse
   // not found
   res.writeHead(404).end("Not Found");
 });
-
 httpServer.on("clientError", (err: Error, socket) => {
   console.error("HTTP client error", err);
   socket.end("HTTP/1.1 400 Bad Request\r\n\r\n");
 });
-
 httpServer.listen(port, host, () => {
   console.log(`MCP server listening on http://${host}:${port}`);
   console.log(`  SSE stream: GET http://${host}:${port}${ssePath}`);
   console.log(`  Message post endpoint: POST http://${host}:${port}${postPath}?sessionId=...`);
 });
+
+// fetch random user
+async function fetchRandomUser() {
+  try {
+    const response = await axios.get('https://randomuser.me/api/');
+    return response.data.results[0];
+  } catch (error) {
+    console.error('Error fetching random user:', error);
+    return null;
+  }
+}
+
+// fetch random photo
+async function fetchRandomPhoto() {
+  try {
+    const randomPage = Math.floor(Math.random() * 5) + 1; 
+    const response = await axios.get(`https://picsum.photos/v2/list?page=${randomPage}&limit=10`);
+    const photos: string[] = response.data.map((photo: PhotoMetadata) => photo.download_url);
+    return photos; 
+  } catch (error) {
+    console.error('Error fetching random photo details:', error);
+    return null;
+  }
+}

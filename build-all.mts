@@ -11,7 +11,7 @@ import tailwindcss from "@tailwindcss/vite";
 
 // src folder
 // const entries = fg.sync("src/**/index.{tsx,jsx}");
-const entries = fg.sync("src/pizzaz-list/index.{tsx,jsx}");
+const entries = fg.sync("src/pizzaz-carousel/index.{tsx,jsx}");
 
 // output folder
 const outDir = "assets";
