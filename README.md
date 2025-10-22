@@ -47,3 +47,7 @@ ssh -R 80:localhost:8080 serveo.net
 - **Enable [developer mode](https://platform.openai.com/docs/guides/developer-mode) and add apps in `Settings > Connectors`**.
 
 ![mcp-inspector](./img/2.PNG)
+
+- **Refresh apps whenever Widget UI (MCP resource) updated**
+
+![mcp-inspector](./img/3.PNG)
